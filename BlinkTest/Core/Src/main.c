@@ -32,7 +32,7 @@
 #include <blinker.h>
 #include <events.h>
 #include <can.h>
-#include <vehicle.c>
+#include <vehicle.h>
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -262,6 +262,13 @@ int main(void)
       }
 
       Lights_Update();
+      VehicleState_t* state = Vehicle_GetState();
+      printf("L=%d BL=%d BR=%d HZ=%d HN=%d\r\n",
+             state->light,
+             state->blinkLeft,
+             state->blinkRight,
+             state->hazard,
+             state->horn);
   }
 }
 
