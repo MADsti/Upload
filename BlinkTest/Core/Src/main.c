@@ -148,6 +148,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Buttons_Init();
   Lights_Init();
+  Vehicle_Init();
+
+
+  VehicleState_t* state = Vehicle_GetState();
+
+  if(state->light)
+  {
+      printf("Light ON\r\n");
+  }
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -205,6 +214,7 @@ int main(void)
     	  printf("EVENT=%d\r\n", event);
 
     	  Can_SendEvent(event);
+    	  Vehicle_HandleEvent(event);
 
           switch(event)
           {
