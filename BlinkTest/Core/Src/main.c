@@ -32,6 +32,7 @@
 #include <blinker.h>
 #include <events.h>
 #include <can.h>
+#include <vehicle.c>
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
