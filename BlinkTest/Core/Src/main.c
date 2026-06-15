@@ -151,13 +151,6 @@ int main(void)
   Lights_Init();
   Vehicle_Init();
 
-
-  VehicleState_t* state = Vehicle_GetState();
-
-  if(state->light)
-  {
-      printf("Light ON\r\n");
-  }
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -198,9 +191,13 @@ int main(void)
 
 	  static uint32_t canTimer = 0;
 
-	  if(HAL_GetTick() - canTimer > 1000)
+	  if(HAL_GetTick() - canTimer >= 50)
 	  {
 	      canTimer = HAL_GetTick();
+
+	      Can_SendStatusFrame();
+
+
 
 	  }
 
@@ -262,14 +259,7 @@ int main(void)
       }
 
       Lights_Update();
-      VehicleState_t* state = Vehicle_GetState();
-      printf("L=%d BL=%d BR=%d HZ=%d HN=%d\r\n",
-             state->light,
-             state->blinkLeft,
-             state->blinkRight,
-             state->hazard,
-             state->horn);
-  }
+      }
 }
 
 

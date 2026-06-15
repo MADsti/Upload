@@ -12,12 +12,15 @@
 #include <stdbool.h>
 
 #define CAN_ID_EVENT 0x100
+#define CAN_ID_STATUS 0x101
 
 void Can_Init(void);
 
 bool Can_SendEvent(Event_t event);
 
 bool Can_GetEvent(Event_t* event);
+
+bool Can_SendStatusFrame(void);
 
 #endif
 
