@@ -7,6 +7,7 @@
 
 #include "blinker.h"
 #include "outputs.h"
+#include "events.h"
 
 #include "main.h"
 
@@ -231,6 +232,7 @@ void Blinker_LeftDown(void)
 {
 	if(blinkerState == BLINKER_HAZARD)
 	{
+		Event_Push(EVENT_HAZARD_OFF);
 	    Blinker_Stop();
 	    return;
 	}
@@ -255,6 +257,7 @@ void Blinker_RightDown(void)
 {
 	if(blinkerState == BLINKER_HAZARD)
 	{
+		Event_Push(EVENT_HAZARD_OFF);
 	    Blinker_Stop();
 	    return;
 	}
@@ -274,6 +277,7 @@ void Blinker_RightUp(void)
 
 void Blinker_HazardToggle(void)
 {
+	printf("BLINKER STATE=%d\r\n", blinkerState);
     if(blinkerState == BLINKER_HAZARD)
     {
         Blinker_Stop();

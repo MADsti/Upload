@@ -11,23 +11,11 @@
 #include <stdio.h>
 #include <blinker.h>
 #include <outputs.h>
-
-typedef enum
-{
-    LIGHT_OFF,
-    LIGHT_LOWBEAM,
-    LIGHT_LOWBEAM_HIGHBEAM
-
-} LightState_t;
+#include "vehicle.h"
 
 
 void Outputs_Update(void);
 
-static bool lightButtonPressed = false;
-static uint32_t lightPressStart = 0;
-static bool lightLongPressHandled = false;
-
-static LightState_t lightState = LIGHT_OFF;
 
 static void UpdateLight(void);
 
@@ -47,71 +35,27 @@ void Lights_Init(void)
 
 	static void UpdateLight(void)
 	{
-		if(lightButtonPressed &&
-		   !lightLongPressHandled)
-		{
-		    if((HAL_GetTick() - lightPressStart) > 1500)
-		    {
-		        lightState = LIGHT_OFF;
+	    VehicleState_t* state =
+	        Vehicle_GetState();
 
-		        lightLongPressHandled = true;
-		    }
-		}
-		switch(lightState)
-		{
-		    case LIGHT_OFF:
-
-		    	outputs.lowBeam = false;
-		    	outputs.highBeam = false;
-		        break;
-
-		    case LIGHT_LOWBEAM:
-
-		    	outputs.lowBeam = true;
-		    	outputs.highBeam = false;
-		        break;
-
-		    case LIGHT_LOWBEAM_HIGHBEAM:
-
-		    	outputs.lowBeam = true;
-		    	outputs.highBeam = true;
-		        break;
-		}
-	}
-
-	void Lights_LightDown(void)
-	{
-	    lightButtonPressed = true;
-
-	    lightPressStart = HAL_GetTick();
-
-	    lightLongPressHandled = false;
-	}
-
-	void Lights_LightUp(void)
-	{
-	    lightButtonPressed = false;
-
-	    if(lightLongPressHandled)
-	    {
-	        return;
-	    }
-
-	    switch(lightState)
+	    switch(state->light)
 	    {
 	        case LIGHT_OFF:
 
-	            lightState = LIGHT_LOWBEAM;
+	            outputs.lowBeam = false;
+	            outputs.highBeam = false;
 	            break;
 
-	        case LIGHT_LOWBEAM:
+	        case LIGHT_LOW:
 
-	            lightState = LIGHT_LOWBEAM_HIGHBEAM;
+	            outputs.lowBeam = true;
+	            outputs.highBeam = false;
 	            break;
 
-	        case LIGHT_LOWBEAM_HIGHBEAM:
+	        case LIGHT_HIGH:
 
-	            lightState = LIGHT_LOWBEAM;
+	            outputs.lowBeam = true;
+	            outputs.highBeam = true;
 	            break;
 	    }
 	}

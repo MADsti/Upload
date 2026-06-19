@@ -181,24 +181,31 @@ int main(void)
 
 
 
-
+  uint32_t canTimer = 0;
 
 
 
   while(1)
   {
 
+	  VehicleState_t* state = Vehicle_GetState();
 
-	  static uint32_t canTimer = 0;
+	  bool statusActive =
+	         state->light
+	      || state->blinkLeft
+	      || state->blinkRight
+	      || state->hazard
+	      || state->horn;
 
-	  if(HAL_GetTick() - canTimer >= 50)
+
+	  if(statusActive)
 	  {
-	      canTimer = HAL_GetTick();
+	      if(HAL_GetTick() - canTimer >= 50)
+	      {
+	          canTimer = HAL_GetTick();
 
-	      Can_SendStatusFrame();
-
-
-
+	          Can_SendStatusFrame();
+	      }
 	  }
 
 
@@ -209,10 +216,14 @@ int main(void)
 
       while(Event_Get(&event))
       {
-    	  printf("EVENT=%d\r\n", event);
 
     	  Can_SendEvent(event);
     	  Vehicle_HandleEvent(event);
+    	  Can_SendStatusFrame();
+
+
+    	  printf("STATE HZ=%d\r\n",
+    	         Vehicle_GetState()->hazard);
 
           switch(event)
           {
@@ -241,18 +252,6 @@ int main(void)
         	  Blinker_HazardToggle();
         	  printf("HAZARD\n");
         	  break;
-
-          case EVENT_LIGHT_DOWN:
-
-              Lights_LightDown();
-              printf("Licht Down\n\r");
-              break;
-
-          case EVENT_LIGHT_UP:
-
-              Lights_LightUp();
-              printf("Licht up\n\r");
-              break;
 
 
           }

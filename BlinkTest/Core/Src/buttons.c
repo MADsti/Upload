@@ -22,6 +22,10 @@ typedef struct
     bool lastRawState;
 
     uint32_t debounceTime;
+
+    uint32_t pressStartTime;
+    bool longPressTriggered;
+
 } Button_t;
 
 static bool hazardCombinationActive = false;
@@ -75,6 +79,8 @@ void Buttons_Init(void)
         buttons[i].lastPressed = state;
         buttons[i].lastRawState = state;
         buttons[i].debounceTime = HAL_GetTick();
+        buttons[i].pressStartTime = 0;
+        buttons[i].longPressTriggered = false;
     }
 }
 void Buttons_Update(void)
@@ -102,6 +108,20 @@ void Buttons_Update(void)
 	        buttons[button].debounceTime) > 20)
 	    {
 	        buttons[button].pressed = rawState;
+
+	        if(button == BUTTON_LIGHT)
+	        {
+	            if(buttons[button].pressed &&
+	               !buttons[button].longPressTriggered)
+	            {
+	                if((HAL_GetTick() -
+	                    buttons[button].pressStartTime) > 1500)
+	                {
+	                    Event_Push(EVENT_LIGHT_LONG_PRESS);
+	                    buttons[button].longPressTriggered = true;
+	                }
+	            }
+	        }
 
 	        if(buttons[button].pressed != buttons[button].lastPressed)
 	        {
@@ -143,13 +163,15 @@ void Buttons_Update(void)
 
 	                    if(buttons[button].pressed)
 	                    {
-	                        Event_Push(
-	                            EVENT_LIGHT_DOWN);
+	                        buttons[button].pressStartTime = HAL_GetTick();
+	                        buttons[button].longPressTriggered = false;
 	                    }
 	                    else
 	                    {
-	                        Event_Push(
-	                            EVENT_LIGHT_UP);
+	                        if(!buttons[button].longPressTriggered)
+	                        {
+	                            Event_Push(EVENT_LIGHT_PRESS);
+	                        }
 	                    }
 
 	                    break;
@@ -168,8 +190,7 @@ void Buttons_Update(void)
 	                    break;
 	            }
 
-	            buttons[button].lastPressed =
-	                buttons[button].pressed;
+	            buttons[button].lastPressed = buttons[button].pressed;
 	        }
 	}
 }
@@ -203,6 +224,7 @@ void Buttons_Update(void)
 	}
 	else
 	{
+
 	    hazardCombinationActive = false;
 
 	    hazardTriggered = false;

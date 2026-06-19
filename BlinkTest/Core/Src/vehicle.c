@@ -1,10 +1,12 @@
 #include "vehicle.h"
+#include "events.h"
+#include <stdio.h>
 
 static VehicleState_t vehicleState;
 
 void Vehicle_Init(void)
 {
-    vehicleState.light = false;
+	vehicleState.light = LIGHT_OFF;
 
     vehicleState.blinkLeft = false;
     vehicleState.blinkRight = false;
@@ -23,13 +25,29 @@ void Vehicle_HandleEvent(Event_t event)
 {
     switch(event)
     {
-        case EVENT_LIGHT_DOWN:
-            vehicleState.light = true;
-            break;
+    case EVENT_LIGHT_PRESS:
 
-        case EVENT_LIGHT_UP:
-            vehicleState.light = false;
-            break;
+        switch(vehicleState.light)
+        {
+            case LIGHT_OFF:
+                vehicleState.light = LIGHT_LOW;
+                break;
+
+            case LIGHT_LOW:
+                vehicleState.light = LIGHT_HIGH;
+                break;
+
+            case LIGHT_HIGH:
+                vehicleState.light = LIGHT_LOW;
+                break;
+        }
+        printf("LIGHT=%d\r\n", vehicleState.light);
+        break;
+
+    case EVENT_LIGHT_LONG_PRESS:
+
+        vehicleState.light = LIGHT_OFF;
+        break;
 
         case EVENT_BLINK_LEFT_DOWN:
             vehicleState.blinkLeft = true;

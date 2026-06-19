@@ -11,9 +11,17 @@
 #include <stdbool.h>
 #include "events.h"
 
+typedef enum
+{
+    LIGHT_OFF = 0,
+    LIGHT_LOW,
+    LIGHT_HIGH
+
+} LightState_t;
+
 typedef struct
 {
-    bool light;
+	LightState_t light;
 
     bool blinkLeft;
     bool blinkRight;
