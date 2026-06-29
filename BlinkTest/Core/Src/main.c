@@ -33,6 +33,7 @@
 #include <events.h>
 #include <can.h>
 #include <vehicle.h>
+#include <string.h>
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -66,32 +67,6 @@ static void MX_FDCAN1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-
-static void Can_TestSend(void)
-{
-    FDCAN_TxHeaderTypeDef txHeader;
-
-    static uint8_t cnt = 0;
-
-    uint8_t data[1] = { cnt++ };
-
-    txHeader.Identifier = 0x100;
-    txHeader.IdType = FDCAN_STANDARD_ID;
-    txHeader.TxFrameType = FDCAN_DATA_FRAME;
-    txHeader.DataLength = FDCAN_DLC_BYTES_1;
-    txHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-    txHeader.BitRateSwitch = FDCAN_BRS_OFF;
-    txHeader.FDFormat = FDCAN_CLASSIC_CAN;
-    txHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-    txHeader.MessageMarker = 0;
-
-        HAL_FDCAN_AddMessageToTxFifoQ(
-            &hfdcan1,
-            &txHeader,
-            data);
-
-}
 /* USER CODE END 0 */
 
 /**
@@ -183,6 +158,7 @@ int main(void)
 
   uint32_t canTimer = 0;
 
+  static VehicleState_t lastCanState = {0};
 
 
   while(1)
@@ -192,68 +168,46 @@ int main(void)
 
 	  bool statusActive =
 	         state->light
-	      || state->blinkLeft
-	      || state->blinkRight
-	      || state->hazard
+	      || state->blinkMode
 	      || state->horn;
 
 
-	  if(statusActive)
+	  if(HAL_GetTick() - canTimer >= 1000)
 	  {
-	      if(HAL_GetTick() - canTimer >= 50)
-	      {
-	          canTimer = HAL_GetTick();
-
-	          Can_SendStatusFrame();
-	      }
+	      canTimer = HAL_GetTick();
+	      Can_SendStatusFrame();
 	  }
 
 
 
-      Buttons_Update();
+	  Buttons_Update();
 
-      Event_t event;
+	  Event_t event;
+	  bool stateChanged = false;
 
-      while(Event_Get(&event))
-      {
+	  while(Event_Get(&event))
+	  {
+	      Can_SendEvent(event);
 
-    	  Can_SendEvent(event);
-    	  Vehicle_HandleEvent(event);
-    	  Can_SendStatusFrame();
+	      Vehicle_HandleEvent(event);
 
-          switch(event)
-          {
-          case EVENT_BLINK_LEFT_DOWN:
-              Blinker_LeftDown();
-              break;
+	      stateChanged = true;
+	  }
 
-          case EVENT_BLINK_LEFT_UP:
-              Blinker_LeftUp();
-              break;
+	  if(stateChanged)
+	  {
+	      Lights_Update();
 
-              default:
-                  break;
+	      VehicleState_t *state = Vehicle_GetState();
 
-          case EVENT_BLINK_RIGHT_DOWN:
-               Blinker_RightDown();
-               break;
-
-          case EVENT_BLINK_RIGHT_UP:
-               Blinker_RightUp();
-               break;
-
-          case EVENT_HAZARD_TOGGLE:
-        	  Blinker_HazardToggle();
-        	  break;
-
-
-          }
-      }
-
-      Lights_Update();
+	      if(memcmp(&lastCanState, state, sizeof(VehicleState_t)) != 0)
+	      {
+	          lastCanState = *state;
+	          Can_SendStatusFrame();
+	      }
+	  }
       }
 }
-
 
 
 

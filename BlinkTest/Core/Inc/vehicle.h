@@ -19,18 +19,25 @@ typedef enum
 
 } LightState_t;
 
+typedef enum
+{
+    BLINK_OFF = 0,
+    BLINK_LEFT,
+    BLINK_RIGHT,
+    BLINK_HAZARD
+
+} BlinkMode_t;
+
 typedef struct
 {
-	LightState_t light;
+    LightState_t light;
 
-    bool blinkLeft;
-    bool blinkRight;
-
-    bool hazard;
+    BlinkMode_t blinkMode;
 
     bool horn;
 
 } VehicleState_t;
+
 
 void Vehicle_Init(void);
 

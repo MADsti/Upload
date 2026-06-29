@@ -54,10 +54,8 @@ bool Can_SendStatusFrame(void)
     uint8_t data[8] = {0};
 
     data[0] = state->light;
-    data[1] = state->blinkLeft;
-    data[2] = state->blinkRight;
-    data[3] = state->hazard;
-    data[4] = state->horn;
+    data[1] = state->blinkMode;
+    data[2] = state->horn;
 
     txHeader.Identifier = CAN_ID_STATUS;
     txHeader.IdType = FDCAN_STANDARD_ID;
