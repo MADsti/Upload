@@ -46,7 +46,8 @@ bool Can_GetEvent(Event_t* event)
 
 bool Can_SendStatusFrame(void)
 {
-    VehicleState_t* state = Vehicle_GetState();
+
+	   VehicleState_t* state = Vehicle_GetState();
 
     FDCAN_TxHeaderTypeDef txHeader;
 
@@ -69,6 +70,15 @@ bool Can_SendStatusFrame(void)
 
     txHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     txHeader.MessageMarker = 0;
+
+    bool ok =
+        HAL_FDCAN_AddMessageToTxFifoQ(
+            &hfdcan1,
+            &txHeader,
+            data) == HAL_OK;
+
+
+    return ok;
 
     return HAL_FDCAN_AddMessageToTxFifoQ(
                &hfdcan1,

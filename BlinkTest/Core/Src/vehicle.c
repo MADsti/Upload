@@ -23,31 +23,35 @@ VehicleState_t* Vehicle_GetState(void)
 
 void Vehicle_HandleEvent(Event_t event)
 {
+
     switch(event)
     {
     case EVENT_LIGHT_PRESS:
 
         switch(vehicleState.light)
         {
+
             case LIGHT_OFF:
                 vehicleState.light = LIGHT_LOW;
                 break;
+
 
             case LIGHT_LOW:
                 vehicleState.light = LIGHT_HIGH;
                 break;
 
+
             case LIGHT_HIGH:
                 vehicleState.light = LIGHT_LOW;
                 break;
-        }
-        printf("LIGHT=%d\r\n", vehicleState.light);
+                       }
         break;
 
     case EVENT_LIGHT_LONG_PRESS:
 
         vehicleState.light = LIGHT_OFF;
         break;
+
 
         case EVENT_BLINK_LEFT_DOWN:
             vehicleState.blinkLeft = true;

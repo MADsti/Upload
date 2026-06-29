@@ -221,10 +221,6 @@ int main(void)
     	  Vehicle_HandleEvent(event);
     	  Can_SendStatusFrame();
 
-
-    	  printf("STATE HZ=%d\r\n",
-    	         Vehicle_GetState()->hazard);
-
           switch(event)
           {
           case EVENT_BLINK_LEFT_DOWN:
@@ -240,17 +236,14 @@ int main(void)
 
           case EVENT_BLINK_RIGHT_DOWN:
                Blinker_RightDown();
-               //printf("RIGHT DOWN\r\n");
                break;
 
           case EVENT_BLINK_RIGHT_UP:
                Blinker_RightUp();
-               //printf("RIGHT UP\r\n");
                break;
 
           case EVENT_HAZARD_TOGGLE:
         	  Blinker_HazardToggle();
-        	  printf("HAZARD\n");
         	  break;
 
 

@@ -162,7 +162,6 @@ static void Blinker_ButtonRelease(void)
 
 				if(blinkMode != lastMode)
 				{
-				    printf("Mode = %d\r\n", blinkMode);
 
 				    lastMode = blinkMode;
 				}
@@ -181,8 +180,6 @@ static void Blinker_ButtonRelease(void)
 			            {
 			                blinkCount--;
 
-			                printf("Remaining: %u\r\n",
-			                       blinkCount);
 
 			                if(blinkCount == 0)
 			                {
@@ -197,23 +194,17 @@ static void Blinker_ButtonRelease(void)
 			        {
 			            case BLINKER_LEFT:
 
-			                printf("LEFT CASE\n\r");
-
 			                outputs.leftBlinker = blinkOutputState;
 			                outputs.rightBlinker = false;
 			                break;
 
 			            case BLINKER_RIGHT:
 
-			                printf("RIGHT CASE\n\r");
-
 			                outputs.leftBlinker = false;
 			                outputs.rightBlinker = blinkOutputState;
 			                break;
 
 			            case BLINKER_HAZARD:
-
-			                printf("HAZARD CASE\n\r");
 
 			                outputs.leftBlinker = blinkOutputState;
 			                outputs.rightBlinker = blinkOutputState;
@@ -277,7 +268,6 @@ void Blinker_RightUp(void)
 
 void Blinker_HazardToggle(void)
 {
-	printf("BLINKER STATE=%d\r\n", blinkerState);
     if(blinkerState == BLINKER_HAZARD)
     {
         Blinker_Stop();
@@ -291,5 +281,4 @@ void Blinker_HazardToggle(void)
     blinkMode = BLINK_MODE_CONTINUOUS;
     blinkCount = 0xFFFF;
 
-    printf("HAZARD START\n");
 }

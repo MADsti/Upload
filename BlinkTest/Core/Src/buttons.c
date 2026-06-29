@@ -83,155 +83,139 @@ void Buttons_Init(void)
         buttons[i].longPressTriggered = false;
     }
 }
+
+
 void Buttons_Update(void)
 {
-	for(int button = 0;
-	    button < BUTTON_COUNT;
-	    button++)
-	{
-	    bool rawState =
-	        (HAL_GPIO_ReadPin(
-	            buttons[button].port,
-	            buttons[button].pin)
-	         == GPIO_PIN_RESET);
+    uint32_t now = HAL_GetTick();
 
-	    if(rawState != buttons[button].lastRawState)
-	    {
-	        buttons[button].debounceTime =
-	            HAL_GetTick();
+    for (int button = 0; button < BUTTON_COUNT; button++)
+    {
+        Button_t *b = &buttons[button];
 
-	        buttons[button].lastRawState =
-	            rawState;
-	    }
+        bool raw =
+            (HAL_GPIO_ReadPin(b->port, b->pin) == GPIO_PIN_RESET);
 
-	    if((HAL_GetTick() -
-	        buttons[button].debounceTime) > 20)
-	    {
-	        buttons[button].pressed = rawState;
+        // ---------- Entprellen ----------
+        if (raw != b->lastRawState)
+        {
+            b->lastRawState = raw;
+            b->debounceTime = now;
+        }
 
-	        if(button == BUTTON_LIGHT)
-	        {
-	            if(buttons[button].pressed &&
-	               !buttons[button].longPressTriggered)
-	            {
-	                if((HAL_GetTick() -
-	                    buttons[button].pressStartTime) > 1500)
-	                {
-	                    Event_Push(EVENT_LIGHT_LONG_PRESS);
-	                    buttons[button].longPressTriggered = true;
-	                }
-	            }
-	        }
+        if ((now - b->debounceTime) < 20)
+            continue;
 
-	        if(buttons[button].pressed != buttons[button].lastPressed)
-	        {
+        b->pressed = raw;
 
-	            switch(button)
-	            {
-	                case BUTTON_BLINK_LEFT:
+        // ---------- Flanke erkannt ----------
+        if (b->pressed != b->lastPressed)
+        {
+            if (b->pressed)
+            {
+                // Taste wurde gedrückt
+                b->pressStartTime = now;
+                b->longPressTriggered = false;
 
-	                    if(buttons[button].pressed)
-	                    {
-	                        Event_Push(
-	                            EVENT_BLINK_LEFT_DOWN);
-	                    }
-	                    else
-	                    {
-	                        Event_Push(
-	                            EVENT_BLINK_LEFT_UP);
-	                    }
+                switch(button)
+                {
+                    case BUTTON_BLINK_LEFT:
+                        Event_Push(EVENT_BLINK_LEFT_DOWN);
+                        break;
 
-	                    break;
+                    case BUTTON_BLINK_RIGHT:
+                        Event_Push(EVENT_BLINK_RIGHT_DOWN);
+                        break;
 
-	                case BUTTON_BLINK_RIGHT:
+                    case BUTTON_HORN:
+                        Event_Push(EVENT_HORN_ON);
+                        break;
 
+                    case BUTTON_LIGHT:
+                        // Nur Timer starten
+                        break;
 
-	                    if(buttons[button].pressed)
-	                    {
-	                        Event_Push(
-	                            EVENT_BLINK_RIGHT_DOWN);
-	                    }
-	                    else
-	                    {
-	                        Event_Push(
-	                            EVENT_BLINK_RIGHT_UP);
-	                    }
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                // Taste wurde losgelassen
+                switch(button)
+                {
+                    case BUTTON_BLINK_LEFT:
+                        Event_Push(EVENT_BLINK_LEFT_UP);
+                        break;
 
-	                    break;
+                    case BUTTON_BLINK_RIGHT:
+                        Event_Push(EVENT_BLINK_RIGHT_UP);
+                        break;
 
-	                case BUTTON_LIGHT:
+                    case BUTTON_HORN:
+                        Event_Push(EVENT_HORN_OFF);
+                        break;
 
-	                    if(buttons[button].pressed)
-	                    {
-	                        buttons[button].pressStartTime = HAL_GetTick();
-	                        buttons[button].longPressTriggered = false;
-	                    }
-	                    else
-	                    {
-	                        if(!buttons[button].longPressTriggered)
-	                        {
-	                            Event_Push(EVENT_LIGHT_PRESS);
-	                        }
-	                    }
+                    case BUTTON_LIGHT:
 
-	                    break;
+                        if (!b->longPressTriggered)
+                        {
+                            Event_Push(EVENT_LIGHT_PRESS);
+                        }
 
-	                case BUTTON_HORN:
+                        b->pressStartTime = 0;
+                        b->longPressTriggered = false;
 
-	                    if(buttons[button].pressed)
-	                    {
-	                        Event_Push(
-	                            EVENT_HORN_ON);
-	                    }
+                        break;
 
-	                    break;
+                    default:
+                        break;
+                }
+            }
 
-	                default:
-	                    break;
-	            }
+            b->lastPressed = b->pressed;
+        }
 
-	            buttons[button].lastPressed = buttons[button].pressed;
-	        }
-	}
-}
-	bool leftPressed =
-	    buttons[BUTTON_BLINK_LEFT].pressed;
+        // ---------- Long Press ----------
+        if (button == BUTTON_LIGHT)
+        {
+            if (b->pressed &&
+                !b->longPressTriggered &&
+                b->pressStartTime != 0 &&
+                (now - b->pressStartTime >= 1500))
+            {
+                b->longPressTriggered = true;
+                Event_Push(EVENT_LIGHT_LONG_PRESS);
+            }
+        }
+    }
 
-	bool rightPressed =
-	    buttons[BUTTON_BLINK_RIGHT].pressed;
+    // ---------- Warnblinker ----------
+    bool leftPressed  = buttons[BUTTON_BLINK_LEFT].pressed;
+    bool rightPressed = buttons[BUTTON_BLINK_RIGHT].pressed;
 
-	static bool hazardTriggered = false;
+    static bool hazardTriggered = false;
 
-	if(leftPressed && rightPressed)
-	{
-	    if(!hazardCombinationActive)
-	    {
-	        hazardCombinationActive = true;
+    if (leftPressed && rightPressed)
+    {
+        if (!hazardCombinationActive)
+        {
+            hazardCombinationActive = true;
+            hazardStartTime = now;
+        }
 
-	        hazardStartTime =
-	            HAL_GetTick();
-	    }
-
-	    if((HAL_GetTick() - hazardStartTime) > 2000)
-	    {
-	        if(!hazardTriggered)
-	        {
-	            Event_Push(EVENT_HAZARD_TOGGLE);
-
-	            hazardTriggered = true;
-	        }
-	    }
-	}
-	else
-	{
-
-	    hazardCombinationActive = false;
-
-	    hazardTriggered = false;
-	}
-}
-
-bool Button_IsPressed(ButtonId_t button)
-{
-    return buttons[button].pressed;
+        if ((now - hazardStartTime) >= 2000)
+        {
+            if (!hazardTriggered)
+            {
+                Event_Push(EVENT_HAZARD_TOGGLE);
+                hazardTriggered = true;
+            }
+        }
+    }
+    else
+    {
+        hazardCombinationActive = false;
+        hazardTriggered = false;
+    }
 }
