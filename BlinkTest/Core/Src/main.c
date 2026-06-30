@@ -171,7 +171,11 @@ int main(void)
       while(Event_Get(&event))
       {
           Can_SendEvent(event);
+
           Vehicle_HandleEvent(event);
+
+          Blinker_HandleEvent(event);
+
       }
 
       Blinker_Update();

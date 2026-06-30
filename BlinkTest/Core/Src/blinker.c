@@ -129,8 +129,6 @@ static void Blinker_ButtonRelease(void)
 
 			        blinkPhase = !blinkPhase;
 
-			        blinkPhase = !blinkPhase;
-
 			        if(!blinkPhase)
 			        {
 			            if(blinkCount != 0xFFFF &&
@@ -147,32 +145,23 @@ static void Blinker_ButtonRelease(void)
 			    }
 	}
 
-void Blinker_LeftDown(void)
+void Blinker_HandleEvent(Event_t event)
 {
-	Blinker_Start();
-}
+    switch(event)
+    {
+        case EVENT_BLINK_LEFT_DOWN:
+        case EVENT_BLINK_RIGHT_DOWN:
 
-void Blinker_LeftUp(void)
-{
-	Blinker_ButtonRelease();
+            Blinker_Start();
+            break;
 
-}
+        case EVENT_BLINK_LEFT_UP:
+        case EVENT_BLINK_RIGHT_UP:
 
-void Blinker_RightDown(void)
-{
-	Blinker_Start();
-}
+            Blinker_ButtonRelease();
+            break;
 
-void Blinker_RightUp(void)
-{
-	Blinker_ButtonRelease();
+        default:
+            break;
     }
-
-void Blinker_HazardToggle(void)
-{
-    Blinker_Start();
-
-    blinkButtonPressed = false;
-    comfortBlinkMode = COMFORT_BLINK_CONTINUOUS;
-    blinkCount = 0xFFFF;
 }
