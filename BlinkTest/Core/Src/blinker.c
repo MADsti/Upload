@@ -106,12 +106,12 @@ static void Blinker_ButtonRelease(void)
 				    uint32_t holdTime =
 				        HAL_GetTick() - blinkPressStart;
 
-				    if(holdTime > 1000)
+				    if(holdTime > 1500)
 				    {
 				        comfortBlinkMode =
 				            COMFORT_BLINK_CONTINUOUS;
 				    }
-				    else if(holdTime > 500)
+				    else if(holdTime > 780)
 				    {
 				        comfortBlinkMode =
 				            COMFORT_BLINK_30;
