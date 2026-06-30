@@ -1,10 +1,8 @@
-
-
-
-
 #include "can.h"
 #include "main.h"
 #include "vehicle.h"
+#include "outputs.h"
+#include "can_protocol.h"
 
 extern FDCAN_HandleTypeDef hfdcan1;
 
@@ -47,20 +45,24 @@ bool Can_GetEvent(Event_t* event)
 bool Can_SendStatusFrame(void)
 {
 
-	   VehicleState_t* state = Vehicle_GetState();
-
     FDCAN_TxHeaderTypeDef txHeader;
 
-    uint8_t data[8] = {0};
+    CanStatusFrame_t frame = {0};
 
-    data[0] = state->light;
-    data[1] = state->blinkMode;
-    data[2] = state->horn;
+    frame.lowBeam      = outputs.lowBeam;
+    frame.highBeam     = outputs.highBeam;
+
+    frame.leftBlinker  = outputs.leftBlinker;
+    frame.rightBlinker = outputs.rightBlinker;
+
+    frame.horn         = outputs.horn;
+
+    frame.speed        = 0;
 
     txHeader.Identifier = CAN_ID_STATUS;
     txHeader.IdType = FDCAN_STANDARD_ID;
     txHeader.TxFrameType = FDCAN_DATA_FRAME;
-    txHeader.DataLength = FDCAN_DLC_BYTES_5;
+    txHeader.DataLength = FDCAN_DLC_BYTES_8;
 
     txHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     txHeader.BitRateSwitch = FDCAN_BRS_OFF;
@@ -73,13 +75,9 @@ bool Can_SendStatusFrame(void)
         HAL_FDCAN_AddMessageToTxFifoQ(
             &hfdcan1,
             &txHeader,
-            data) == HAL_OK;
+			(uint8_t *)&frame) == HAL_OK;
 
 
     return ok;
 
-    return HAL_FDCAN_AddMessageToTxFifoQ(
-               &hfdcan1,
-               &txHeader,
-               data) == HAL_OK;
 }
