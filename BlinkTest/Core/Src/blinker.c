@@ -25,19 +25,8 @@ typedef enum
 
 } ComfortBlinkMode_t;
 
-typedef enum
-{
-    BLINKER_OFF,
-    BLINKER_LEFT,
-    BLINKER_RIGHT,
-    BLINKER_HAZARD
 
-} BlinkerState_t;
-
-static BlinkerState_t blinkerState;
 static ComfortBlinkMode_t comfortBlinkMode;
-
-static int lastMode = -1;
 
 static uint32_t blinkTimer;
 static uint32_t blinkPressStart;
@@ -45,7 +34,6 @@ static uint32_t blinkPressStart;
 static uint16_t blinkCount;
 
 static bool blinkButtonPressed;
-static bool lastBlinkPhase;
 
 static bool blinkPhase;
 
@@ -56,23 +44,20 @@ bool Blinker_GetPhase(void)
 
 void Blinker_Init(void)
 {
-    blinkerState = BLINKER_OFF;
     comfortBlinkMode = COMFORT_BLINK_3;
 }
 
 static void Blinker_Stop(void)
-	{
-	    blinkerState = BLINKER_OFF;
+{
+    blinkButtonPressed = false;
+    blinkCount = 0;
 
-	    blinkButtonPressed = false;
-	    blinkCount = 0;
+    comfortBlinkMode = COMFORT_BLINK_3;
 
-	    comfortBlinkMode = COMFORT_BLINK_3;
+    blinkPhase = false;
 
-	    blinkPhase = false;
-	    lastBlinkPhase = false;
-
-	}
+    Event_Push(EVENT_BLINK_STOP);
+}
 
 static void Blinker_Start(void)
 	{
@@ -83,7 +68,6 @@ static void Blinker_Start(void)
 	    blinkTimer = HAL_GetTick();
 
 	    blinkPhase = true;
-	    lastBlinkPhase = false;
 
 	}
 
@@ -110,13 +94,12 @@ static void Blinker_ButtonRelease(void)
  void Blinker_Update(void)
 	{
 	 VehicleState_t *state = Vehicle_GetState();
-		if(state->blinkMode == BLINK_OFF)
-				{
-					outputs.leftBlinker = false;
-					outputs.rightBlinker = false;
 
-				    return;
-				}
+	 if(state->blinkMode == BLINK_OFF)
+	 {
+	     blinkPhase = false;
+	     return;
+	 }
 
 				if(blinkButtonPressed)
 				{
@@ -140,58 +123,33 @@ static void Blinker_ButtonRelease(void)
 				    }
 				}
 
-
-				if(comfortBlinkMode != lastMode)
-				{
-
-				    lastMode = comfortBlinkMode;
-				}
-
 			    if((HAL_GetTick() - blinkTimer) > 500)
 			    {
 			        blinkTimer = HAL_GetTick();
 
 			        blinkPhase = !blinkPhase;
 
-			        if(lastBlinkPhase == true &&
-			        		blinkPhase == false)
+			        blinkPhase = !blinkPhase;
+
+			        if(!blinkPhase)
 			        {
 			            if(blinkCount != 0xFFFF &&
 			               blinkCount > 0)
 			            {
 			                blinkCount--;
 
-
 			                if(blinkCount == 0)
 			                {
-			                	Blinker_Stop();
+			                    Blinker_Stop();
 			                }
 			            }
 			        }
-
-			        lastBlinkPhase = blinkPhase;
 			    }
 	}
 
 void Blinker_LeftDown(void)
 {
-
-	VehicleState_t *state = Vehicle_GetState();
-	if(state->blinkMode == BLINK_HAZARD)
-	{
-		Event_Push(EVENT_HAZARD_OFF);
-	    Blinker_Stop();
-	    return;
-	}
-	if(state->blinkMode == BLINK_LEFT)
-    {
-		Blinker_Stop();
-        return;
-    }
-
 	Blinker_Start();
-
-
 }
 
 void Blinker_LeftUp(void)
@@ -202,19 +160,6 @@ void Blinker_LeftUp(void)
 
 void Blinker_RightDown(void)
 {
-	VehicleState_t *state = Vehicle_GetState();
-	if(state->blinkMode == BLINK_HAZARD)
-	{
-		Event_Push(EVENT_HAZARD_OFF);
-	    Blinker_Stop();
-	    return;
-	}
-	if(state->blinkMode == BLINK_RIGHT)
-    {
-    	Blinker_Stop();
-        return;
-    }
-
 	Blinker_Start();
 }
 
@@ -225,19 +170,9 @@ void Blinker_RightUp(void)
 
 void Blinker_HazardToggle(void)
 {
-	VehicleState_t *state = Vehicle_GetState();
-
-	if(state->blinkMode == BLINK_HAZARD)
-    {
-        Blinker_Stop();
-        return;
-    }
-
-	Blinker_Start();
+    Blinker_Start();
 
     blinkButtonPressed = false;
-
     comfortBlinkMode = COMFORT_BLINK_CONTINUOUS;
     blinkCount = 0xFFFF;
-
 }
