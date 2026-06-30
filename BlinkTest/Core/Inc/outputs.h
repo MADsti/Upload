@@ -13,7 +13,11 @@ typedef struct
     bool lowBeam;
     bool highBeam;
 
+    bool horn;
+
 } Outputs_t;
+
+
 
 extern Outputs_t outputs;
 

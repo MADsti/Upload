@@ -34,6 +34,7 @@
 #include <can.h>
 #include <vehicle.h>
 #include <string.h>
+#include "outputs.h"
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -161,52 +162,37 @@ int main(void)
   static VehicleState_t lastCanState = {0};
 
 
-  while(1)
+  while (1)
   {
+      Buttons_Update();
 
-	  VehicleState_t* state = Vehicle_GetState();
+      Event_t event;
+      bool stateChanged = false;
 
-	  bool statusActive =
-	         state->light
-	      || state->blinkMode
-	      || state->horn;
+      while(Event_Get(&event))
+      {
+          Can_SendEvent(event);
 
+          Vehicle_HandleEvent(event);
 
-	  if(HAL_GetTick() - canTimer >= 1000)
-	  {
-	      canTimer = HAL_GetTick();
-	      Can_SendStatusFrame();
-	  }
-
-
-
-	  Buttons_Update();
-
-	  Event_t event;
-	  bool stateChanged = false;
-
-	  while(Event_Get(&event))
-	  {
-	      Can_SendEvent(event);
-
-	      Vehicle_HandleEvent(event);
-
-	      stateChanged = true;
-	  }
-
-	  if(stateChanged)
-	  {
-	      Lights_Update();
-
-	      VehicleState_t *state = Vehicle_GetState();
-
-	      if(memcmp(&lastCanState, state, sizeof(VehicleState_t)) != 0)
-	      {
-	          lastCanState = *state;
-	          Can_SendStatusFrame();
-	      }
-	  }
+          stateChanged = true;
       }
+
+      Blinker_Update();
+
+      Outputs_Update();
+
+      if(stateChanged)
+      {
+          VehicleState_t *state = Vehicle_GetState();
+
+          if(memcmp(&lastCanState, state, sizeof(VehicleState_t)) != 0)
+          {
+              lastCanState = *state;
+              Can_SendStatusFrame();
+          }
+      }
+  }
 }
 
 
