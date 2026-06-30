@@ -159,38 +159,29 @@ int main(void)
 
   uint32_t canTimer = 0;
 
-  static VehicleState_t lastCanState = {0};
+  static Outputs_t lastOutputs = {0};
 
 
-  while (1)
+  while(1)
   {
       Buttons_Update();
 
       Event_t event;
-      bool stateChanged = false;
 
       while(Event_Get(&event))
       {
           Can_SendEvent(event);
-
           Vehicle_HandleEvent(event);
-
-          stateChanged = true;
       }
 
       Blinker_Update();
 
       Outputs_Update();
 
-      if(stateChanged)
+      if(memcmp(&lastOutputs, &outputs, sizeof(Outputs_t)) != 0)
       {
-          VehicleState_t *state = Vehicle_GetState();
-
-          if(memcmp(&lastCanState, state, sizeof(VehicleState_t)) != 0)
-          {
-              lastCanState = *state;
-              Can_SendStatusFrame();
-          }
+          lastOutputs = outputs;
+          Can_SendStatusFrame();
       }
   }
 }

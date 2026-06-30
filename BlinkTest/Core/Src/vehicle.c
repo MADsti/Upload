@@ -66,6 +66,11 @@ void Vehicle_HandleEvent(Event_t event)
 
         break;
 
+    case EVENT_BLINK_STOP:
+
+        vehicleState.blinkMode = BLINK_OFF;
+        break;
+
     case EVENT_HAZARD_TOGGLE:
 
         if(vehicleState.blinkMode == BLINK_HAZARD)

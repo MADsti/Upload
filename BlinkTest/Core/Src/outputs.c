@@ -78,7 +78,7 @@ void Outputs_Update(void)
     HAL_GPIO_WritePin(
         LD2_GPIO_Port,
         LD2_Pin,
-        outputs.lowBeam ?
+        outputs.rightBlinker ?
             GPIO_PIN_SET :
             GPIO_PIN_RESET);
 }
