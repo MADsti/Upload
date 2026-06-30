@@ -50,19 +50,35 @@ void Vehicle_HandleEvent(Event_t event)
 
     case EVENT_BLINK_LEFT_DOWN:
 
-        if(vehicleState.blinkMode == BLINK_LEFT)
+        if(vehicleState.blinkMode == BLINK_HAZARD)
+        {
             vehicleState.blinkMode = BLINK_OFF;
+        }
+        else if(vehicleState.blinkMode == BLINK_LEFT)
+        {
+            vehicleState.blinkMode = BLINK_OFF;
+        }
         else
+        {
             vehicleState.blinkMode = BLINK_LEFT;
+        }
 
         break;
 
     case EVENT_BLINK_RIGHT_DOWN:
 
-        if(vehicleState.blinkMode == BLINK_RIGHT)
+        if(vehicleState.blinkMode == BLINK_HAZARD)
+        {
             vehicleState.blinkMode = BLINK_OFF;
+        }
+        else if(vehicleState.blinkMode == BLINK_RIGHT)
+        {
+            vehicleState.blinkMode = BLINK_OFF;
+        }
         else
+        {
             vehicleState.blinkMode = BLINK_RIGHT;
+        }
 
         break;
 
