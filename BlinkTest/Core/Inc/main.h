@@ -29,9 +29,6 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
 
-#include "stm32g4xx_nucleo.h"
-#include <stdio.h>
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -60,20 +57,33 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define T_SWDIO_Pin GPIO_PIN_13
-#define T_SWDIO_GPIO_Port GPIOA
-#define T_SWCLK_Pin GPIO_PIN_14
-#define T_SWCLK_GPIO_Port GPIOA
-#define T_SWO_Pin GPIO_PIN_3
-#define T_SWO_GPIO_Port GPIOB
-#define LEFT_OUT_Pin GPIO_PIN_4
-#define LEFT_OUT_GPIO_Port GPIOB
-#define RIGHT_OUT_Pin GPIO_PIN_5
-#define RIGHT_OUT_GPIO_Port GPIOB
+#define BlinkLinksIn_Pin GPIO_PIN_0
+#define BlinkLinksIn_GPIO_Port GPIOA
+#define BlinkRechtsIn_Pin GPIO_PIN_1
+#define BlinkRechtsIn_GPIO_Port GPIOA
+#define HupeIn_Pin GPIO_PIN_2
+#define HupeIn_GPIO_Port GPIOA
+#define LichttasterIn_Pin GPIO_PIN_3
+#define LichttasterIn_GPIO_Port GPIOA
+#define Reserve_Pin GPIO_PIN_4
+#define Reserve_GPIO_Port GPIOA
+#define Umdrehungssignal_Pin GPIO_PIN_5
+#define Umdrehungssignal_GPIO_Port GPIOA
+#define Blinklinks_out_Pin GPIO_PIN_15
+#define Blinklinks_out_GPIO_Port GPIOA
+#define Blinkrechts_out_Pin GPIO_PIN_3
+#define Blinkrechts_out_GPIO_Port GPIOB
+#define Abblendlicht_out_Pin GPIO_PIN_4
+#define Abblendlicht_out_GPIO_Port GPIOB
+#define Fernlicht_out_Pin GPIO_PIN_5
+#define Fernlicht_out_GPIO_Port GPIOB
+#define Hupe_out_Pin GPIO_PIN_6
+#define Hupe_out_GPIO_Port GPIOB
+#define Reserve_out_Pin GPIO_PIN_7
+#define Reserve_out_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define LD2_Pin GPIO_PIN_8
-#define LD2_GPIO_Port GPIOB
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

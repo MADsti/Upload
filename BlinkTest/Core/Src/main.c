@@ -21,20 +21,19 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "buttons.h"
+#include "events.h"
+#include "blinker.h"
+#include "vehicle.h"
+#include "outputs.h"
+#include "can.h"
+#include "lights.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#include <lights.h>
-#include <main.h>
-#include <buttons.h>
-#include <blinker.h>
-#include <events.h>
-#include <can.h>
-#include <vehicle.h>
-#include <string.h>
-#include "outputs.h"
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -48,9 +47,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
-COM_InitTypeDef BspCOMInit;
-
 FDCAN_HandleTypeDef hfdcan1;
 
 /* USER CODE BEGIN PV */
@@ -101,110 +97,53 @@ int main(void)
   MX_GPIO_Init();
   MX_FDCAN1_Init();
 
-  FDCAN_FilterTypeDef sFilterConfig;
-
-  sFilterConfig.IdType = FDCAN_STANDARD_ID;
-  sFilterConfig.FilterIndex = 0;
-  sFilterConfig.FilterType = FDCAN_FILTER_MASK;
-  sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-  sFilterConfig.FilterID1 = 0x000;
-  sFilterConfig.FilterID2 = 0x000;
-
-  HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig);
-
-  HAL_FDCAN_ConfigGlobalFilter(
-      &hfdcan1,
-      FDCAN_ACCEPT_IN_RX_FIFO0,
-      FDCAN_ACCEPT_IN_RX_FIFO0,
-      FDCAN_FILTER_REMOTE,
-      FDCAN_FILTER_REMOTE);
-
-      HAL_FDCAN_Start(&hfdcan1);
-
-
   /* USER CODE BEGIN 2 */
-  Buttons_Init();
-  Lights_Init();
-  Vehicle_Init();
-
-  /* USER CODE END 2 */
-
-  /* Initialize leds */
-  BSP_LED_Init(LED_GREEN);
-
-  /* Initialize COM1 port (115200, 8 bits (7-bit data + 1 stop bit), no parity */
-  BspCOMInit.BaudRate   = 115200;
-  BspCOMInit.WordLength = COM_WORDLENGTH_8B;
-  BspCOMInit.StopBits   = COM_STOPBITS_1;
-  BspCOMInit.Parity     = COM_PARITY_NONE;
-  BspCOMInit.HwFlowCtl  = COM_HWCONTROL_NONE;
-  if (BSP_COM_Init(COM1, &BspCOMInit) != BSP_ERROR_NONE)
+  if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK)
   {
-    Error_Handler();
+      Error_Handler();
   }
-
-  /* USER CODE BEGIN BSP */
-
-
-  /* -- Sample board code to switch on leds ---- */
-  BSP_LED_On(LED_GREEN);
-
-  /* USER CODE END BSP */
+  Buttons_Init();
+  Blinker_Init();
+  Vehicle_Init();
+  Lights_Init();
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t canTimer = HAL_GetTick();
+  Outputs_t lastOutputs = {0};
 
-
-
-
-  uint32_t canTimer = 0;
-
-  static Outputs_t lastOutputs = {0};
-
-
-  while(1)
+  while (1)
   {
       Buttons_Update();
 
       Event_t event;
-
-      while(Event_Get(&event))
+      while (Event_Get(&event))
       {
           Can_SendEvent(event);
-
           Vehicle_HandleEvent(event);
-
           Blinker_HandleEvent(event);
-
       }
 
       Blinker_Update();
-
       Outputs_Update();
 
-      if(memcmp(&lastOutputs, &outputs, sizeof(Outputs_t)) != 0)
+      /* Status sofort senden, wenn sich ein Ausgang ändert */
+      if (memcmp(&lastOutputs, &outputs, sizeof(Outputs_t)) != 0)
       {
           lastOutputs = outputs;
           Can_SendStatusFrame();
       }
+
+      /* Zusätzlich alle 1 Sekunde Status senden */
+      if (HAL_GetTick() - canTimer >= 800)
+      {
+          canTimer = HAL_GetTick();
+          Can_SendStatusFrame();
+      }
   }
-}
-
-
-
-
-
-
-
-
-
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-
   /* USER CODE END 3 */
-
+}
 
 /**
   * @brief System Clock Configuration
@@ -285,18 +224,15 @@ static void MX_FDCAN1_Init(void)
   hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
     Error_Handler();
-
-  }
-
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
 
   /* USER CODE END FDCAN1_Init 2 */
 
+}
 
 /**
   * @brief GPIO Initialization Function
@@ -315,60 +251,50 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LEFT_OUT_Pin|RIGHT_OUT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Blinklinks_out_GPIO_Port, Blinklinks_out_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA9 PA10 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_15;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, Blinkrechts_out_Pin|Abblendlicht_out_Pin|Fernlicht_out_Pin|Hupe_out_Pin
+                          |Reserve_out_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : BlinkLinksIn_Pin BlinkRechtsIn_Pin HupeIn_Pin LichttasterIn_Pin
+                           Reserve_Pin */
+  GPIO_InitStruct.Pin = BlinkLinksIn_Pin|BlinkRechtsIn_Pin|HupeIn_Pin|LichttasterIn_Pin
+                          |Reserve_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LEFT_OUT_Pin RIGHT_OUT_Pin */
-  GPIO_InitStruct.Pin = LEFT_OUT_Pin|RIGHT_OUT_Pin;
+  /*Configure GPIO pin : Umdrehungssignal_Pin */
+  GPIO_InitStruct.Pin = Umdrehungssignal_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Umdrehungssignal_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Blinklinks_out_Pin */
+  GPIO_InitStruct.Pin = Blinklinks_out_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Blinklinks_out_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Blinkrechts_out_Pin Abblendlicht_out_Pin Fernlicht_out_Pin Hupe_out_Pin
+                           Reserve_out_Pin */
+  GPIO_InitStruct.Pin = Blinkrechts_out_Pin|Abblendlicht_out_Pin|Fernlicht_out_Pin|Hupe_out_Pin
+                          |Reserve_out_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-#define LEFT_OUT_Pin GPIO_PIN_4
-#define LEFT_OUT_GPIO_Port GPIOB
 
-#define RIGHT_OUT_Pin GPIO_PIN_5
-#define RIGHT_OUT_GPIO_Port GPIOB
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /**
   * @brief  This function is executed in case of error occurrence.
