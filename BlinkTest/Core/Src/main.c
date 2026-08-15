@@ -102,6 +102,10 @@ int main(void)
   {
       Error_Handler();
   }
+
+  HAL_Delay(500);
+
+
   Buttons_Init();
   Blinker_Init();
   Vehicle_Init();
